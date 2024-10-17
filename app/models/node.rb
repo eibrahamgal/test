@@ -21,6 +21,7 @@ class Node < ApplicationRecord
     def propose_state(new_state)
       self.state = new_state
       log_message("Node #{identifier} proposes state #{new_state}")
+      puts "Node #{identifier} is proposing state #{new_state}"  # DEBUG LOG
       send_message_to_neighbors(new_state)
       save
     end
@@ -30,18 +31,23 @@ class Node < ApplicationRecord
       neighbors.each do |neighbor_id|
         neighbor = Node.find_by(identifier: neighbor_id)
         next unless neighbor
-  
-        neighbor.receive_message(proposed_state)
+    
+        puts "Node #{identifier} is sending state #{proposed_state} to Node #{neighbor.identifier}"  # DEBUG LOG
+        neighbor.receive_message({ state: proposed_state })
       end
     end
   
     # Receive a message from a neighboring node
     def receive_message(message)
-        if message[:state] > self.state
-          self.state = message[:state]
-          log_message("Node #{self.identifier} adopts state #{self.state}")
-        end
+      puts "Node #{identifier} received state #{message[:state]}"  # DEBUG LOG
+      if message[:state] > self.state
+        self.state = message[:state]
+        log_message("Node #{self.identifier} adopts state #{self.state}")
+        puts "Node #{identifier} adopts state #{self.state}"  # DEBUG LOG
+        save
+      end
     end
+    
   
     # Simulate network partition by removing certain neighbors
     def simulate_partition(partitioned_nodes)
